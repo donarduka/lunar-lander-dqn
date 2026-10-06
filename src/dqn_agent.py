@@ -5,16 +5,33 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import logging
+logger = logging.getLogger(__name__)
+
 """ Q-network - simple feedforward network that takes the state as input and outputs
     Q-values for each action"""
 class QNetwork(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden=64):
+    def __init__(self, state_dim: int, action_dim: int, hidden: int=64) -> None:
+        """Simple feedforward Q-network.
+        
+        Args:
+            state_dim: Dimension of state space
+            action_dim: Dimension of action space
+            hidden: Hidden layer size"""
         super(QNetwork, self).__init__()
         self.layer1 = nn.Linear(state_dim, hidden)
         self.layer2 = nn.Linear(hidden, hidden)
         self.layer3 = nn.Linear(hidden, action_dim)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through network.
+        
+        Args:
+            x: Input vector
+            
+        Returns:
+            Q-values for each action
+        """
         x = torch.relu(self.layer1(x))
         x = torch.relu(self.layer2(x))
         return self.layer3(x)
@@ -22,13 +39,35 @@ class QNetwork(nn.Module):
 """ Replay Buffer - stores past experiences so the agent can learn from them later
     sampling randomly breaks the correlation between consecutive steps"""
 class ReplayBuffer:
-    def __init__(self, capacity=50000):
+    def __init__(self, capacity: int=50000) -> None:
+        """Store and sample experiences for replay.
+        
+        Args:
+            capacity: Maximum buffer size
+        """
         self.memory = deque(maxlen=capacity)
 
-    def remember(self, state, action, reward, next_state, done):
+    def remember(self, state: np.ndarray, action: int, reward: float, next_state: np.ndarray, done: bool) -> None:
+        """Store experience in buffer.
+        
+        Args:
+            state: current state
+            action: action taken
+            reward: reward received
+            next_state: next state
+            done: episode termination flag
+        """
         self.memory.append((state, action, reward, next_state, done))
 
-    def sample(self, batch_size):
+    def sample(self, batch_size: int) -> tuple:
+        """Sample random batch from buffer.
+        
+        Args:
+            batch_size: Number of samples to return
+            
+        Returns:
+            Tuple of (states, actions, rewards, next_states, dones) as numpy arrays
+        """
         batch = random.sample(self.memory, batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
         return (
@@ -39,7 +78,8 @@ class ReplayBuffer:
             np.array(dones, dtype = np.float32),
         )
     
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return current buffer size."""
         return len(self.memory)
     
 """ DQN Agent - brings the Q-network, target network replay buffer and epsilon-greedy
@@ -80,6 +120,8 @@ class DQNAgent:
         self.optimiser = optim.Adam(self.policy_net.parameters(), lr=self.LR)
         self.memory = ReplayBuffer(self.BUFFER_SIZE)
         self.losses = []
+
+        logger.info(f"DQNAgent intialised: state_dim={state_dim}, action_dim={action_dim}, device={device}")
 
     def remember(self, state: np.ndarray, action: int, reward: float, next_state: np.ndarray, done: bool):
         """Store transition in replay buffer.
@@ -195,6 +237,10 @@ class DQNAgent:
         states_t, actions_t, rewards_t, next_states_t, dones_t = self._convert_to_tensors(states, actions, rewards, next_states, dones)
         current_q, target_q = self._comput_q_values(states_t, actions_t, next_states_t, dones_t, rewards_t)
         loss_val = self._update_network(current_q, target_q)
+
+        if (self.episode % 100) == 0:
+            logger.info(f"Episode {self.episode}: Loss={loss_val:.4f}")
+
         return loss_val
     
     def decay_epsilon(self) -> None:
