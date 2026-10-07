@@ -286,7 +286,7 @@ class DQNAgent:
             next_states_t,
             dones_t,
         ) = self._convert_to_tensors(states, actions, rewards, next_states, dones)
-        current_q, target_q = self._comput_q_values(
+        current_q, target_q = self._compute_q_values(
             states_t, actions_t, next_states_t, dones_t, rewards_t
         )
         loss_val = self._update_network(current_q, target_q)
