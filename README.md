@@ -28,6 +28,12 @@ pip install -r requirements.txt
 - **ReplayBuffer**: Stores and samples past experiences
 - **DQNAgent**: Orchestrates learning loop with epsilon-greedy exploration
 
+## Results
+
+![Reward curve](assets/reward_curve.png)
+
+Trained for 1,000 episodes. Early episodes show high variance and negative rewards as the agent explores randomly. From around episode 300, the moving average rises steadily as epsilon decays and the agent shifts to exploiting its learned policy, landing consistently from that point on.
+
 ## Key Hyperparameters
 
 - GAMMA = 0.99 (discount factor)
