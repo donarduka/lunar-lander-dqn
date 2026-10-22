@@ -1,5 +1,9 @@
 # Lunar Lander DQN Agent
 
+![Tests](https://github.com/donarduka/lunar-lander-dqn/actions/workflows/tests.yml/badge.svg)
+
+![Trained agent landing](assets/lander.gif)
+
 Deep Q-Network agent trained on OpenAI Gymnasium's LunarLander-v2 environment.
 
 ## Features
